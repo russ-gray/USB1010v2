@@ -96,7 +96,9 @@ USB1010V2_DATA usb1010v2Data;
 
 /* TODO:  Add any necessary callback functions.
 */
-/* I2C master callback function */
+
+
+/* I2C master callback function - Turned off 1/5/19 to try different approach to counting successful transmissions
 void I2CMasterOpStatusCb ( DRV_I2C_BUFFER_EVENT event,
                            DRV_I2C_BUFFER_HANDLE bufferHandle,
                            uintptr_t context)
@@ -114,6 +116,7 @@ void I2CMasterOpStatusCb ( DRV_I2C_BUFFER_EVENT event,
             break;
     }
 }
+*/
 
 
 // *****************************************************************************
@@ -159,6 +162,7 @@ bool writeI2Cdata(uint8_t address, uint8_t target, uint8_t payload)
     //      goto WAIT;
     //}
     
+    /* Turned this part off 1/5/19 to try different approach to counting successful transmissions 
     // Delay loop to ensure current write has finished    
     while ( (APP_Check_Transfer_Status(usb1010v2Data.drvI2CHandle, usb1010v2Data.drvI2CTxRxBufferHandle[0]) != DRV_I2C_BUFFER_EVENT_COMPLETE)
           && (APP_Check_Transfer_Status(usb1010v2Data.drvI2CHandle, usb1010v2Data.drvI2CTxRxBufferHandle[0]) != DRV_I2C_BUFFER_EVENT_ERROR) )
@@ -178,7 +182,24 @@ bool writeI2Cdata(uint8_t address, uint8_t target, uint8_t payload)
             return false;
         }
     }
-    return true;
+    return true;*/
+    DRV_I2C_BUFFER_EVENT transferStatus;
+    do 
+    { // Check transfer status until complete or error event is encountered
+        transferStatus = APP_Check_Transfer_Status(usb1010v2Data.drvI2CHandle, usb1010v2Data.drvI2CTxRxBufferHandle[0]);
+        Nop();
+    }
+    while (transferStatus != DRV_I2C_BUFFER_EVENT_COMPLETE && transferStatus != DRV_I2C_BUFFER_EVENT_ERROR);
+    
+    if (transferStatus == DRV_I2C_BUFFER_EVENT_ERROR)    
+    {
+        return false;
+    }
+    else
+    {
+        usb1010v2Data.successCount++;       // increment success counter
+        return true;
+    }
 }
 
 // Function to initialize a codec
@@ -231,15 +252,15 @@ bool codecInit(uint8_t codec)
     // Configure right line out volume
     writeI2Cdata(CODEC_SLAVE_WR, 0x3C, 0x15);
     
-    // This section modified for debugging (1/4/19)
-    /*
+    // This section modified for debugging (1/5/19)
+    
     if (usb1010v2Data.successCount == INIT_WRITE_COUNT)
     {
         return true;
     }
     return false;
-    */
-    return true;
+    
+    //return true;
 }
 
 // Function to test I2C communications (use for bring-up/debugging)
