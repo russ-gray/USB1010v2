@@ -187,49 +187,49 @@ bool codecInit(uint8_t codec)
     // Reset success counter
     successCount = 0;
     // Configure multiplexer switch
-    writeI2Cdata(MULT_ADDR, 0x00, codec);
+    if (writeI2Cdata(MULT_ADDR, 0x00, codec)) successCount++;
     // Configure shutdown mode (global enable = off)
-    writeI2Cdata(CODEC_SLAVE_WR, 0x45, 0x00);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x45, 0x00)) successCount++;
     // Configure system clock
-    writeI2Cdata(CODEC_SLAVE_WR, 0x1B, 0x10);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x1B, 0x10)) successCount++;
     // Configure interface format for 24-bit operation
-    writeI2Cdata(CODEC_SLAVE_WR, 0x22, 0x05);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x22, 0x05)) successCount++;
     // Configure interface I/O
-    writeI2Cdata(CODEC_SLAVE_WR, 0x25, 0x03);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x25, 0x03)) successCount++;
     // Configure left and right ADC levels
-    writeI2Cdata(CODEC_SLAVE_WR, 0x17, 0x03);
-    writeI2Cdata(CODEC_SLAVE_WR, 0x18, 0x03);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x17, 0x03)) successCount++;
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x18, 0x03)) successCount++;
     // Configure filters for music playback - Seems unnecessary (12/15/18)
     //writeI2Cdata(CODEC_SLAVE_WR, 0x26, 0x80);
     // Configure ADC
-    writeI2Cdata(CODEC_SLAVE_WR, 0x44, 0x05);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x44, 0x05)) successCount++;
     // Configure DAC
-    writeI2Cdata(CODEC_SLAVE_WR, 0x43, 0x01);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x43, 0x01)) successCount++;
     // Configure input pair (default value)
-    writeI2Cdata(CODEC_SLAVE_WR, 0x0D, LINE_INPUT);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x0D, LINE_INPUT)) successCount++;
     //writeI2Cdata(CODEC_SLAVE_WR, 0x0D, PHONO_INPUT);
     // Configure left and right ADC inputs
-    writeI2Cdata(CODEC_SLAVE_WR, 0x15, 0x08);
-    writeI2Cdata(CODEC_SLAVE_WR, 0x16, 0x10);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x15, 0x08)) successCount++;
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x16, 0x10)) successCount++;
     // Configure left line out mixer
-    writeI2Cdata(CODEC_SLAVE_WR, 0x37, 0x01);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x37, 0x01)) successCount++;
     // Configure right line out mixer
-    writeI2Cdata(CODEC_SLAVE_WR, 0x3A, 0x82);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x3A, 0x82)) successCount++;
     // Configure input gain (default value)
-    writeI2Cdata(CODEC_SLAVE_WR, 0x0E, GAIN_FLAT);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x0E, GAIN_FLAT)) successCount++;
     // Configure left line out for minimum volume
-    writeI2Cdata(CODEC_SLAVE_WR, 0x39, 0x00);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x39, 0x00)) successCount++;
     // Configure right line out for minimum volume
-    writeI2Cdata(CODEC_SLAVE_WR, 0x3C, 0x00);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x3C, 0x00)) successCount++;
     // Configure shutdown mode (global enable = on)
-    writeI2Cdata(CODEC_SLAVE_WR, 0x45, 0x80);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x45, 0x80)) successCount++;
     // Configure input and output enable
-    writeI2Cdata(CODEC_SLAVE_WR, 0x3E, 0x0F);
-    writeI2Cdata(CODEC_SLAVE_WR, 0x3F, 0x0F);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x3E, 0x0F)) successCount++;
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x3F, 0x0F)) successCount++;
     // Configure left line out volume
-    writeI2Cdata(CODEC_SLAVE_WR, 0x39, 0x15);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x39, 0x15)) successCount++;
     // Configure right line out volume
-    writeI2Cdata(CODEC_SLAVE_WR, 0x3C, 0x15);
+    if (writeI2Cdata(CODEC_SLAVE_WR, 0x3C, 0x15)) successCount++;
     
     // This section modified for debugging (1/4/19)
     

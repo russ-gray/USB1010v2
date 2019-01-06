@@ -277,7 +277,7 @@ extern "C" {
 #define MAX_NUMBER_OF_BUFFERS           10
 #define MAX_WRITE_RETRIES               5
 #define CODEC_SLAVE_WR                  0x20
-#define INIT_WRITE_COUNT                23      //total number of init write operations
+#define INIT_WRITE_COUNT                22      //total number of init write operations
 #define CODEC_1                         0x01
 #define CODEC_2                         0x02
 #define CODEC_3                         0x04
