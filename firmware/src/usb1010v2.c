@@ -231,15 +231,11 @@ bool codecInit(uint8_t codec)
     // Configure right line out volume
     if (writeI2Cdata(CODEC_SLAVE_WR, 0x3C, 0x15)) successCount++;
     
-    // This section modified for debugging (1/4/19)
-    
     if (successCount == INIT_WRITE_COUNT)
     {
         return true;
     }
     return false;
-    
-    //return true;
 }
 
 // Function to test I2C communications (use for bring-up/debugging)
@@ -388,9 +384,17 @@ void USB1010V2_Tasks ( void )
                      break;
                 }  
             }
+            
             if (!usb1010v2Data.codecsInitialized)
-            {
+            { // Codecs not initialized, transition to codec initialization state
                 usb1010v2Data.state = USB1010V2_STATE_INITIALIZE_CODECS;
+                break;
+            }
+            
+            if (!usb1010v2Data.powerInitialized)
+            { // Analog power not initialized, transition to analog power initialization state
+                usb1010v2Data.state = USB1010V2_STATE_INITIALIZE_POWER;
+                break;
             }
             break;
         }
@@ -398,7 +402,10 @@ void USB1010V2_Tasks ( void )
         /* TODO: implement your application state machine.*/
         case USB1010V2_STATE_INITIALIZE_POWER:
         { // This state is still under construction (12/7/2018)
-            // placeholder code for development
+            // Turn on SMPS
+            EN_POSREGOn();
+            EN_NEGREGOn();
+                    
             usb1010v2Data.powerInitialized = true;
             usb1010v2Data.state = USB1010V2_STATE_SERVICE_TASKS;
             break;

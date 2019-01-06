@@ -265,7 +265,7 @@ extern "C" {
 
 /* Debug/bring-up mode definition macros */    
 #define DEBUG_MODE                      true // flag for debug LED control
-#define TEST_I2C                        true // flag for I2C function bring-up test   
+#define TEST_I2C                        false // flag for I2C function bring-up test   
 
 /* I2C definition macros */
 #define LINE_INPUT                      0x30
