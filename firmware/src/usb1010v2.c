@@ -105,7 +105,7 @@ void I2CMasterOpStatusCb ( DRV_I2C_BUFFER_EVENT event,
     switch (event)
     {
         case DRV_I2C_BUFFER_EVENT_COMPLETE:
-            usb1010v2Data.successCount++; // Increment success counter
+            successCount++; // Increment success counter
             Nop();
             break;
         //case DRV_I2C_BUFFER_EVENT_ERROR:
@@ -185,7 +185,7 @@ bool writeI2Cdata(uint8_t address, uint8_t target, uint8_t payload)
 bool codecInit(uint8_t codec)
 {
     // Reset success counter
-    usb1010v2Data.successCount = 0;
+    successCount = 0;
     // Configure multiplexer switch
     writeI2Cdata(MULT_ADDR, 0x00, codec);
     // Configure shutdown mode (global enable = off)
@@ -232,14 +232,14 @@ bool codecInit(uint8_t codec)
     writeI2Cdata(CODEC_SLAVE_WR, 0x3C, 0x15);
     
     // This section modified for debugging (1/4/19)
-    /*
-    if (usb1010v2Data.successCount == INIT_WRITE_COUNT)
+    
+    if (successCount == INIT_WRITE_COUNT)
     {
         return true;
     }
     return false;
-    */
-    return true;
+    
+    //return true;
 }
 
 // Function to test I2C communications (use for bring-up/debugging)
