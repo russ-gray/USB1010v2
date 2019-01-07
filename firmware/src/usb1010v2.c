@@ -282,6 +282,8 @@ void USB1010V2_Initialize ( void )
     usb1010v2Data.i2cInitialized = false;
     usb1010v2Data.appInitialized = false;
     usb1010v2Data.codecsInitialized = false;
+    usb1010v2Data.smpsInitialized = false;
+    usb1010v2Data.powerInitialized = false;
     
     // Set main timer handle to invalid
     usb1010v2Data.mainTimer = SYS_TMR_HANDLE_INVALID;
@@ -321,9 +323,7 @@ void USB1010V2_Tasks ( void )
                 usb1010v2Data.hDelayTimer = SYS_TMR_DelayMS(HEARTBEAT_DELAY);
                 if (usb1010v2Data.hDelayTimer != SYS_TMR_HANDLE_INVALID)
                 { // Valid handle returned; turn LED on and set status flag
-                    //LED1On();
                     LED2On();
-                    //LED3On();
                     usb1010v2Data.ledInitialized = true;
                 }
             }
@@ -367,7 +367,10 @@ void USB1010V2_Tasks ( void )
 
         /* Application main task servicing state */
         case USB1010V2_STATE_SERVICE_TASKS:
-        {           
+        {   
+            // Get the current time
+            usb1010v2Data.currTime = SYS_TMR_ObjectCountGet(usb1010v2Data.mainTimer, NULL);
+            
             if (DEBUG_MODE)
             { // Debug mode activated; handle debug functions
                 if(!usb1010v2Data.i2cTested && TEST_I2C)
@@ -391,28 +394,55 @@ void USB1010V2_Tasks ( void )
                 }  
             }
             
-            if (!usb1010v2Data.codecsInitialized)
-            { // Codecs not initialized, transition to codec initialization state
-                usb1010v2Data.state = USB1010V2_STATE_INITIALIZE_CODECS;
-                break;
-            }
-            
             if (!usb1010v2Data.powerInitialized)
             { // Analog power not initialized, transition to analog power initialization state
                 usb1010v2Data.state = USB1010V2_STATE_INITIALIZE_POWER;
                 break;
             }
+            
+            if (!usb1010v2Data.codecsInitialized)
+            { // Codecs not initialized, transition to codec initialization state
+                usb1010v2Data.state = USB1010V2_STATE_INITIALIZE_CODECS;
+                break;
+            } 
             break;
         }
 
         /* TODO: implement your application state machine.*/
         case USB1010V2_STATE_INITIALIZE_POWER:
-        { // This state is still under construction (1/5/2019)
-            // Turn on SMPS
-            EN_POSREGOn();
-            EN_NEGREGOn();
+        { 
+            if (!usb1010v2Data.smpsInitialized)
+            { // SMPS not started; enable switching regulators
+                EN_POSREGOn();
+                EN_NEGREGOn();
+                
+                // Record SMPS start time
+                usb1010v2Data.startTimeSMPS = usb1010v2Data.currTime;
+                
+                // Set SMPS initialization flag
+                usb1010v2Data.smpsInitialized = true;
+            }
+            
+            // Get elapsed time since SMPS startup as local variable. Modular arithmetic is used to handle timer wraparound.
+            uint32_t elapsedTime = (MAIN_TIMER_PERIOD + usb1010v2Data.startTimeSMPS - usb1010v2Data.currTime) 
+                                    % MAIN_TIMER_PERIOD;
                     
-            usb1010v2Data.powerInitialized = true;
+            if (usb1010v2Data.smpsInitialized && (elapsedTime >= SMPS_STARTUP_DELAY))
+            { // SMPS section started
+                // Enable LDOs
+                EN_POSLDOOn();
+                EN_NEGLDOOn();
+            
+                if (DEBUG_MODE)
+                { // Turn on yellow success LED
+                    LED3On();
+                }
+                
+                // Set power initialization flag
+                usb1010v2Data.powerInitialized = true;
+            }
+            
+            // Transition to task servicing state
             usb1010v2Data.state = USB1010V2_STATE_SERVICE_TASKS;
             break;
         }

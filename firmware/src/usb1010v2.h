@@ -129,6 +129,7 @@ typedef struct
             i2cTested,              // I2C functionality test flag (for bring-up/debugging)
             mainTimerInitialized,   // Main timer initialization flag
             appInitialized,         // Application initialization flag
+            smpsInitialized,        // Switch-mode power supply initialization flag
             powerInitialized,       // Opamp power supply initialization flag
             codec1ok,               // Codec 1 startup configuration flag
             codec2ok,               // Codec 2 startup configuration flag
@@ -137,7 +138,8 @@ typedef struct
             ledsDefault,            // Initial LED state configuration flag   
             codecsInitialized;      // Codec initial configuration flag
     
-    uint32_t    successCount;       // Codec startup success counter
+    uint32_t    currTime,           // Current time value
+                startTimeSMPS;      // Switch-mode power supply section start time
     
 } USB1010V2_DATA;
 
