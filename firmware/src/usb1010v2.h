@@ -117,7 +117,8 @@ typedef struct
     USB1010V2_STATES state;
 
     /* TODO: Define any additional data used by the application. */
-    SYS_TMR_HANDLE hDelayTimer;     // Handle for heartbeat delay timer
+    SYS_TMR_HANDLE  hDelayTimer,    // Handle for heartbeat delay timer
+                    mainTimer;      // Handle for main system timer
     
     DRV_HANDLE drvI2CHandle;        // Handle for I2C master
     
@@ -126,6 +127,7 @@ typedef struct
     bool    ledInitialized,         // Heartbeat LED initialization flag
             i2cInitialized,         // I2C driver initialization flag
             i2cTested,              // I2C functionality test flag (for bring-up/debugging)
+            mainTimerInitialized,   // Main timer initialization flag
             appInitialized,         // Application initialization flag
             powerInitialized,       // Opamp power supply initialization flag
             codec1ok,               // Codec 1 startup configuration flag

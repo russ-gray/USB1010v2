@@ -96,7 +96,7 @@ USB1010V2_DATA usb1010v2Data;
 
 /* TODO:  Add any necessary callback functions.
 */
-/* I2C master callback function */
+/* I2C master callback function - deactivated 1/6/19; seems to be deprecated
 void I2CMasterOpStatusCb ( DRV_I2C_BUFFER_EVENT event,
                            DRV_I2C_BUFFER_HANDLE bufferHandle,
                            uintptr_t context)
@@ -114,7 +114,7 @@ void I2CMasterOpStatusCb ( DRV_I2C_BUFFER_EVENT event,
             break;
     }
 }
-
+*/
 
 // *****************************************************************************
 // *****************************************************************************
@@ -140,7 +140,7 @@ bool writeI2Cdata(uint8_t address, uint8_t target, uint8_t payload)
     TX_buffer[0] = target; 
     TX_buffer[1] = payload;
 
-    uint8_t errorCount = 0; // Set error counter to zero
+    uint8_t errorCount = 0; // Set local error counter to zero
     
     WRITE: // This label allows the function to retry writing a set number of times
     usb1010v2Data.drvI2CTxRxBufferHandle[0] = DRV_I2C_Transmit(usb1010v2Data.drvI2CHandle,
@@ -148,16 +148,6 @@ bool writeI2Cdata(uint8_t address, uint8_t target, uint8_t payload)
                                                 &TX_buffer[0],
                                                 2,
                                                 NULL);
-    
-    
-    //DRV_I2C_BUFFER_EVENT transferStatus;  // This is for use in an improved version of the logic below after initial validation
-    // Check current transfer status
-    //WAIT:
-    //transferStatus = APP_Check_Transfer_Status(usb1010v2Data.drvI2CHandle, usb1010v2Data.drvI2CTxRxBufferHandle[0]);
-    //if (transferStatus != DRV_I2C_BUFFER_EVENT_COMPLETE && transferStatus != DRV_I2C_BUFFER_EVENT_ERROR)
-    //{ // Write attempt still in progress; check status again
-    //      goto WAIT;
-    //}
     
     // Delay loop to ensure current write has finished    
     while ( (APP_Check_Transfer_Status(usb1010v2Data.drvI2CHandle, usb1010v2Data.drvI2CTxRxBufferHandle[0]) != DRV_I2C_BUFFER_EVENT_COMPLETE)
@@ -184,7 +174,7 @@ bool writeI2Cdata(uint8_t address, uint8_t target, uint8_t payload)
 // Function to initialize a codec
 bool codecInit(uint8_t codec)
 {
-    // Reset success counter
+    // Reset static success counter
     successCount = 0;
     // Configure multiplexer switch
     if (writeI2Cdata(MULT_ADDR, 0x00, codec)) successCount++;
@@ -293,6 +283,9 @@ void USB1010V2_Initialize ( void )
     usb1010v2Data.appInitialized = false;
     usb1010v2Data.codecsInitialized = false;
     
+    // Set main timer handle to invalid
+    usb1010v2Data.mainTimer = SYS_TMR_HANDLE_INVALID;
+    
     // Set I2C test flag to false
     usb1010v2Data.i2cTested = false;
     
@@ -335,6 +328,16 @@ void USB1010V2_Tasks ( void )
                 }
             }
             
+            // Start main timer
+            if (usb1010v2Data.mainTimer == SYS_TMR_HANDLE_INVALID)
+            { // Timer handle invalid, start new timer
+                usb1010v2Data.mainTimer = SYS_TMR_CallbackPeriodic(MAIN_TIMER_PERIOD, 0, NULL);
+            }                              
+            if (usb1010v2Data.mainTimer != SYS_TMR_HANDLE_INVALID)
+            { // Valid handle returned; set status flag
+                usb1010v2Data.mainTimerInitialized = true;
+            }
+            
             // Initialize I2C master driver
             usb1010v2Data.drvI2CHandle = DRV_I2C_Open(DRV_I2C_INDEX_0,DRV_IO_INTENT_READWRITE);
             if (usb1010v2Data.drvI2CHandle != (DRV_HANDLE) NULL)
@@ -344,12 +347,15 @@ void USB1010V2_Tasks ( void )
             
             // Check for successful initialization conditions
             if (DEBUG_MODE)
-            { // Debug mode activated; check for I2C and heartbeat LED
-                usb1010v2Data.appInitialized = usb1010v2Data.i2cInitialized && usb1010v2Data.ledInitialized;
+            { // Debug mode activated; check for I2C, main timer, and heartbeat LED
+                usb1010v2Data.appInitialized =  usb1010v2Data.i2cInitialized 
+                                                && usb1010v2Data.mainTimerInitialized
+                                                && usb1010v2Data.ledInitialized;
             }
             else
-            { // Debug mode deactivated; check for I2C only
-                usb1010v2Data.appInitialized = usb1010v2Data.i2cInitialized;
+            { // Debug mode deactivated; check for I2C and main timer only
+                usb1010v2Data.appInitialized =  usb1010v2Data.i2cInitialized
+                                                && usb1010v2Data.mainTimerInitialized;
             }
             
             if (usb1010v2Data.appInitialized)
@@ -401,7 +407,7 @@ void USB1010V2_Tasks ( void )
 
         /* TODO: implement your application state machine.*/
         case USB1010V2_STATE_INITIALIZE_POWER:
-        { // This state is still under construction (12/7/2018)
+        { // This state is still under construction (1/5/2019)
             // Turn on SMPS
             EN_POSREGOn();
             EN_NEGREGOn();

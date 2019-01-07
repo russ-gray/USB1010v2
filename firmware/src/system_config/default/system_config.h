@@ -263,6 +263,10 @@ extern "C" {
 /* Heartbeat definition macros */
 #define HEARTBEAT_DELAY                 500 // milliseconds
 
+/* Main timer definition macros */
+#define MAIN_TIMER_PERIOD               0xFFFF  // milliseconds
+#define SMPS_STARTUP_DELAY              4   // milliseconds    
+    
 /* Debug/bring-up mode definition macros */    
 #define DEBUG_MODE                      true // flag for debug LED control
 #define TEST_I2C                        false // flag for I2C function bring-up test   
