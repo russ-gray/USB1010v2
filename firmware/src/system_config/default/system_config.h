@@ -265,7 +265,7 @@ extern "C" {
 
 /* Main timer definition macros */
 #define MAIN_TIMER_PERIOD               0xFFFF  // milliseconds
-#define SMPS_STARTUP_DELAY              4   // milliseconds    
+#define SMPS_STARTUP_DELAY              5   // milliseconds    
     
 /* Debug/bring-up mode definition macros */    
 #define DEBUG_MODE                      true // flag for debug LED control
