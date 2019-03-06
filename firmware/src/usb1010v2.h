@@ -136,10 +136,26 @@ typedef struct
             codec3ok,               // Codec 3 startup configuration flag
             codec4ok,               // Codec 4 startup configuration flag
             ledsDefault,            // Initial LED state configuration flag   
-            codecsInitialized;      // Codec initial configuration flag
+            codecsInitialized,      // Codec initial configuration flag
+            changeGain,             // Gain change flag
+            inputToggle,            // Input selection toggle flag
+            thruToggle;             // Through mode toggle flag
     
     uint32_t    currTime,           // Current time value
-                startTimeSMPS;      // Switch-mode power supply section start time
+                startTimeSMPS,      // Switch-mode power supply section start time
+                startTimeGain1,     // Gain switch start times
+                startTimeGain2,
+                startTimeGain3,
+                startTimeGain4;
+    
+    uint8_t     input1Mode,         // Input mode variables
+                input2Mode,
+                input3Mode,
+                input4Mode,
+                gain1Mode,          // Gain mode variables
+                gain2Mode,
+                gain3Mode,
+                gain4Mode;
     
 } USB1010V2_DATA;
 
