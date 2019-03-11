@@ -443,33 +443,35 @@ void USB1010V2_Tasks ( void )
                 break;
             }
             
-            // Check phono/line switches for change requirements
-            if (PHONO_SW1StateGet() != usb1010v2Data.inputModeCh1)
+            if (usb1010v2Data.codecsInitialized)
             {
-                usb1010v2Data.inputToggleCh1 = true;
+                // Check phono/line switches for change requirements
+                if (PHONO_SW1StateGet() != usb1010v2Data.inputModeCh1)
+                {
+                    usb1010v2Data.inputToggleCh1 = true;
+                }
+                if (PHONO_SW2StateGet() != usb1010v2Data.inputModeCh2)
+                {
+                    usb1010v2Data.inputToggleCh2 = true;
+                }
+                if (PHONO_SW3StateGet() != usb1010v2Data.inputModeCh3)
+                {
+                    usb1010v2Data.inputToggleCh3 = true;
+                }
+                if (PHONO_SW4StateGet() != usb1010v2Data.inputModeCh4)
+                {
+                    usb1010v2Data.inputToggleCh4 = true;
+                }
+
+                if (usb1010v2Data.inputToggleCh1 ||
+                    usb1010v2Data.inputToggleCh2 ||
+                    usb1010v2Data.inputToggleCh3 ||
+                    usb1010v2Data.inputToggleCh4)
+                { // Transition to input mode change state
+                    usb1010v2Data.state = USB1010V2_STATE_CHANGE_INPUT_MODE;
+                    break;
+                }
             }
-            if (PHONO_SW2StateGet() != usb1010v2Data.inputModeCh2)
-            {
-                usb1010v2Data.inputToggleCh2 = true;
-            }
-            if (PHONO_SW3StateGet() != usb1010v2Data.inputModeCh3)
-            {
-                usb1010v2Data.inputToggleCh3 = true;
-            }
-            if (PHONO_SW4StateGet() != usb1010v2Data.inputModeCh4)
-            {
-                usb1010v2Data.inputToggleCh4 = true;
-            }
-            
-            if (usb1010v2Data.inputToggleCh1 ||
-                usb1010v2Data.inputToggleCh2 ||
-                usb1010v2Data.inputToggleCh3 ||
-                usb1010v2Data.inputToggleCh4)
-            { // Transition to input mode change state
-                usb1010v2Data.state = USB1010V2_STATE_CHANGE_INPUT_MODE;
-                break;
-            }
-            
             break;
         }
 
