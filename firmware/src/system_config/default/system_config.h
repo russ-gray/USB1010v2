@@ -261,15 +261,15 @@ extern "C" {
 
 // CUSTOM CODE - DO NOT DELETE
 /* Heartbeat definition macros */
-#define HEARTBEAT_DELAY                 500 // milliseconds
+#define HEARTBEAT_DELAY                 500     // milliseconds
 
 /* Main timer definition macros */
 #define MAIN_TIMER_PERIOD               0xFFFF  // milliseconds
-#define SMPS_STARTUP_DELAY              5   // milliseconds    
+#define SMPS_STARTUP_DELAY              5       // milliseconds    
     
 /* Debug/bring-up mode definition macros */    
-#define DEBUG_MODE                      true // flag for debug LED control
-#define TEST_I2C                        false // flag for I2C function bring-up test   
+#define DEBUG_MODE                      true    // flag for debug LED control
+#define TEST_I2C                        false   // flag for I2C function bring-up test   
 
 /* I2C definition macros */
 #define LINE_INPUT                      0x30
@@ -287,7 +287,11 @@ extern "C" {
 #define CODEC_3                         0x04
 #define CODEC_4                         0x08    
 #define MULT_ADDR                       0xE0
-#define EXPR_ADDR                       0x40    
+#define EXPR_ADDR                       0x40
+
+/* Input mode definition macros */
+#define LINE_LEVEL                      0
+#define PHONO_LEVEL                     1
     
 // END OF CUSTOM CODE
     

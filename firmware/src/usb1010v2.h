@@ -88,12 +88,13 @@ typedef enum
 {
 	/* Application's state machine's initial state. */
 	USB1010V2_STATE_INIT=0,
-	USB1010V2_STATE_SERVICE_TASKS,
 
 	/* TODO: Define states used by the application state machine. */
+    USB1010V2_STATE_SERVICE_TASKS,
     USB1010V2_STATE_RESTART_HB_TIMER,
     USB1010V2_STATE_INITIALIZE_CODECS,
-    USB1010V2_STATE_INITIALIZE_POWER,        
+    USB1010V2_STATE_INITIALIZE_POWER,
+    USB1010V2_STATE_CHANGE_INPUT_MODE,
 
 } USB1010V2_STATES;
 
@@ -137,25 +138,26 @@ typedef struct
             codec4ok,               // Codec 4 startup configuration flag
             ledsDefault,            // Initial LED state configuration flag   
             codecsInitialized,      // Codec initial configuration flag
-            changeGain,             // Gain change flag
-            inputToggle,            // Input selection toggle flag
-            thruToggle;             // Through mode toggle flag
+            inputToggleCh1,         // Input selection toggle flags
+            inputToggleCh2,
+            inputToggleCh3,
+            inputToggleCh4,
+            inputModeCh1,           // Input mode status flags
+            inputModeCh2,
+            inputModeCh3,
+            inputModeCh4;
     
     uint32_t    currTime,           // Current time value
                 startTimeSMPS,      // Switch-mode power supply section start time
-                startTimeGain1,     // Gain switch start times
-                startTimeGain2,
-                startTimeGain3,
-                startTimeGain4;
+                startTimeSW1,       // Channel switch start times
+                startTimeSW2,
+                startTimeSW3,
+                startTimeSW4;
     
-    uint8_t     input1Mode,         // Input mode variables
-                input2Mode,
-                input3Mode,
-                input4Mode,
-                gain1Mode,          // Gain mode variables
-                gain2Mode,
-                gain3Mode,
-                gain4Mode;
+    uint8_t     gainModeCh1,        // Gain mode variables
+                gainModeCh2,
+                gainModeCh3,
+                gainModeCh4;
     
 } USB1010V2_DATA;
 

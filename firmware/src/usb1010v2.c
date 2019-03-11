@@ -228,6 +228,32 @@ bool codecInit(uint8_t codec)
     return false;
 }
 
+// Function to toggle a codec input
+bool codecInputToggle(uint8_t codec, bool *currentMode)
+{
+    bool retVal = false;    // Return value
+    
+    if (writeI2Cdata(MULT_ADDR, 0x00, codec))
+    { // Communication path to codec open
+        switch (*currentMode)
+        { // Write appropriate input selection to codec
+            case LINE_LEVEL: 
+            {
+                retVal = writeI2Cdata(CODEC_SLAVE_WR, 0x0D, PHONO_INPUT);
+                break;
+            }
+            case PHONO_LEVEL: 
+            {
+                retVal = writeI2Cdata(CODEC_SLAVE_WR, 0x0D, LINE_INPUT);
+                break;
+            }
+        }
+    }
+    // If I2C write was successful, toggle the input mode
+    if (retVal == true) *currentMode = !(*currentMode);
+    return retVal;
+}
+
 // Function to test I2C communications (use for bring-up/debugging)
 bool i2cTest()
 {
@@ -298,6 +324,16 @@ void USB1010V2_Initialize ( void )
     usb1010v2Data.codec3ok = false;
     usb1010v2Data.codec4ok = false;
     usb1010v2Data.ledsDefault = false;
+    
+    // Set input modes to default (line level), input toggle flags off
+    usb1010v2Data.inputModeCh1 = LINE_LEVEL;
+    usb1010v2Data.inputModeCh2 = LINE_LEVEL;
+    usb1010v2Data.inputModeCh3 = LINE_LEVEL;
+    usb1010v2Data.inputModeCh4 = LINE_LEVEL;
+    usb1010v2Data.inputToggleCh1 = false;
+    usb1010v2Data.inputToggleCh2 = false;
+    usb1010v2Data.inputToggleCh3 = false;
+    usb1010v2Data.inputToggleCh4 = false;
 }
 
 
@@ -405,7 +441,35 @@ void USB1010V2_Tasks ( void )
             { // Codecs not initialized, transition to codec initialization state
                 usb1010v2Data.state = USB1010V2_STATE_INITIALIZE_CODECS;
                 break;
-            } 
+            }
+            
+            // Check phono/line switches for change requirements
+            if (PHONO_SW1StateGet() != usb1010v2Data.inputModeCh1)
+            {
+                usb1010v2Data.inputToggleCh1 = true;
+            }
+            if (PHONO_SW2StateGet() != usb1010v2Data.inputModeCh2)
+            {
+                usb1010v2Data.inputToggleCh2 = true;
+            }
+            if (PHONO_SW3StateGet() != usb1010v2Data.inputModeCh3)
+            {
+                usb1010v2Data.inputToggleCh3 = true;
+            }
+            if (PHONO_SW4StateGet() != usb1010v2Data.inputModeCh4)
+            {
+                usb1010v2Data.inputToggleCh4 = true;
+            }
+            
+            if (usb1010v2Data.inputToggleCh1 ||
+                usb1010v2Data.inputToggleCh2 ||
+                usb1010v2Data.inputToggleCh3 ||
+                usb1010v2Data.inputToggleCh4)
+            { // Transition to input mode change state
+                usb1010v2Data.state = USB1010V2_STATE_CHANGE_INPUT_MODE;
+                break;
+            }
+            
             break;
         }
 
@@ -486,13 +550,53 @@ void USB1010V2_Tasks ( void )
                     usb1010v2Data.ledsDefault)
                 { // All four codecs initialized; set flag and transition to service tasks state
                     if (DEBUG_MODE)
-                    { // Turn on success LED
+                    { // Turn on blue success LED
                         LED1On();
                     }
                     usb1010v2Data.codecsInitialized = true;
                     usb1010v2Data.state = USB1010V2_STATE_SERVICE_TASKS;
                 }
             }
+            break;
+        }
+        
+        case USB1010V2_STATE_CHANGE_INPUT_MODE:
+        {
+            if (usb1010v2Data.inputToggleCh1)
+            { // Toggle input 1
+                if (codecInputToggle(CODEC_1, &usb1010v2Data.inputModeCh1))
+                { // Input successfully toggled, turn off flag
+                    usb1010v2Data.inputToggleCh1 = false;
+                }
+            }
+            
+            if (usb1010v2Data.inputToggleCh2)
+            { // Toggle input 2
+                if (codecInputToggle(CODEC_2, &usb1010v2Data.inputModeCh2))
+                { // Input successfully toggled, turn off flag
+                    usb1010v2Data.inputToggleCh2 = false;
+                }
+            }
+            
+            if (usb1010v2Data.inputToggleCh3)
+            { // Toggle input 3
+                if (codecInputToggle(CODEC_3, &usb1010v2Data.inputModeCh3))
+                { // Input successfully toggled, turn off flag
+                    usb1010v2Data.inputToggleCh3 = false;
+                }
+            }
+            
+            if (usb1010v2Data.inputToggleCh4)
+            { // Toggle input 4
+                if (codecInputToggle(CODEC_4, &usb1010v2Data.inputModeCh4))
+                { // Input successfully toggled, turn off flag
+                    usb1010v2Data.inputToggleCh4 = false;
+                }
+            }
+            
+            // Transition to service tasks state
+            usb1010v2Data.state = USB1010V2_STATE_SERVICE_TASKS;
+                
             break;
         }
         
