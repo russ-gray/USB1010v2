@@ -231,7 +231,7 @@ bool codecInit(uint8_t codec)
 // Function to toggle a codec input
 bool codecInputToggle(uint8_t codec, bool *currentMode)
 {
-    bool retVal = false;    // Return value
+    bool retVal = false;    // Return value variable
     
     if (writeI2Cdata(MULT_ADDR, 0x00, codec))
     { // Communication path to codec open
@@ -252,6 +252,109 @@ bool codecInputToggle(uint8_t codec, bool *currentMode)
     // If I2C write was successful, toggle the input mode
     if (retVal == true) *currentMode = !(*currentMode);
     return retVal;
+}
+
+// Function to calculate and return elapsed time
+uint32_t getElapsedTime(uint32_t time)
+{ // Modular arithmetic is used to handle timer wraparound case
+    uint32_t elapsedTime = (MAIN_TIMER_PERIOD + time - usb1010v2Data.currTime) % MAIN_TIMER_PERIOD;
+    return elapsedTime;
+}
+
+// Function to handle switch presses
+bool switchPress(uint32_t time, bool *mode)
+{ // Returns true if valid switch press is processed, false otherwise
+    uint32_t swElapsedTime = getElapsedTime(time);
+    bool retVal = true;
+    
+    if (swElapsedTime >= MIN_SWITCH_DELAY)
+    { // Switch actuation de-bounced
+        retVal = false;
+        if (swElapsedTime >= GAIN_SWITCH_DELAY && swElapsedTime < MAX_SWITCH_DELAY)
+        { // Switch actuation time-validated; handle switch press
+            if (swElapsedTime >= THRU_SWITCH_DELAY)
+            { // Long press for thru mode
+                *mode = THRU_CHANGE;   
+            }
+            else 
+            { // No long press implies short press for gain change
+                *mode = GAIN_CHANGE;
+            }
+            // Set activation flag and state transition for valid switch press
+            retVal = true;
+            usb1010v2Data.state = USB1010V2_STATE_CHANGE_CHANNEL_MODE;
+        }
+    }
+    return retVal;
+}
+
+// Function to implement channel gain and thru mode changes
+bool channelChange(uint8_t codec, bool changeMode, bool *switchFlag, bool *thruMode, uint8_t *gainMode)
+{ 
+    // Configure multiplexer for correct codec
+    if(writeI2Cdata(MULT_ADDR, 0x00, codec))
+    {
+        switch (changeMode)
+        {
+            bool success = false;   // Local success flag
+
+            case THRU_CHANGE:
+            { // Thru change
+                if (*thruMode == THRU_ON)
+                { // Thru mode currently on; return to digital audio interface
+                    if (writeI2Cdata(CODEC_SLAVE_WR, 0x37, 0x01) && writeI2Cdata(CODEC_SLAVE_WR, 0x3A, 0x82))
+                    { // Codec reconfigured; change mode
+                        *thruMode = THRU_OFF;
+                        success = true;
+                    }
+                }
+                else if (*thruMode == THRU_OFF)
+                { // Thru mode currently off; route inputs to outputs
+                    if (writeI2Cdata(CODEC_SLAVE_WR, 0x37, 0x04) && writeI2Cdata(CODEC_SLAVE_WR, 0x3A, 0x88))
+                    { // Codec reconfigured; change mode
+                        *thruMode = THRU_ON;
+                        success = true;
+                    }
+                }
+                // If thru change was successful, turn off switch activation flag
+                *switchFlag = !success;
+            break;
+            }
+
+            case GAIN_CHANGE:
+            { // Gain change
+
+                // Calculate incremented gain mode
+                uint8_t newGainMode = (*gainMode + 1) % 3;
+
+                switch (newGainMode)
+                { // Change gain to new selection
+                    case GAIN_m3dB:
+                    { // Write -3dB gain setting to codec
+                        if (writeI2Cdata(CODEC_SLAVE_WR, 0x0E, GAIN_3_DN)) success = true;
+                        break;
+                    }
+                    case GAIN_0dB:
+                    { // Write 0dB gain setting to codec
+                        if (writeI2Cdata(CODEC_SLAVE_WR, 0x0E, GAIN_FLAT)) success = true;
+                        break;
+                    }
+                    case GAIN_p3dB:
+                    { // Write +3dB gain setting to codec
+                        if (writeI2Cdata(CODEC_SLAVE_WR, 0x0E, GAIN_3_UP)) success = true;
+                        break;
+                    }
+                }
+
+                if (success) 
+                { // Successful change; update gain mode and turn off switch activation flag
+                    *gainMode = newGainMode;
+                    *switchFlag = !success;
+                }
+            break;
+            }
+        }
+    }
 }
 
 // Function to test I2C communications (use for bring-up/debugging)
@@ -334,6 +437,24 @@ void USB1010V2_Initialize ( void )
     usb1010v2Data.inputToggleCh2 = false;
     usb1010v2Data.inputToggleCh3 = false;
     usb1010v2Data.inputToggleCh4 = false;
+    
+    // Set gain switch flags to false
+    usb1010v2Data.gainSwCh1 = false;
+    usb1010v2Data.gainSwCh2 = false;
+    usb1010v2Data.gainSwCh3 = false;
+    usb1010v2Data.gainSwCh4 = false;
+    
+    // Set gain states to default (0dB)
+    usb1010v2Data.gainModeCh1 = GAIN_0dB;
+    usb1010v2Data.gainModeCh2 = GAIN_0dB;
+    usb1010v2Data.gainModeCh3 = GAIN_0dB;
+    usb1010v2Data.gainModeCh4 = GAIN_0dB;
+    
+    // Set thru mode flags to off
+    usb1010v2Data.thruModeCh1 = THRU_OFF;
+    usb1010v2Data.thruModeCh2 = THRU_OFF;
+    usb1010v2Data.thruModeCh3 = THRU_OFF;
+    usb1010v2Data.thruModeCh4 = THRU_OFF;
 }
 
 
@@ -432,19 +553,20 @@ void USB1010V2_Tasks ( void )
             }
             
             if (!usb1010v2Data.powerInitialized)
-            { // Analog power not initialized, transition to analog power initialization state
+            { // Analog power not initialized; transition to analog power initialization state
                 usb1010v2Data.state = USB1010V2_STATE_INITIALIZE_POWER;
                 break;
             }
             
             if (!usb1010v2Data.codecsInitialized)
-            { // Codecs not initialized, transition to codec initialization state
+            { // Codecs not initialized; transition to codec initialization state
                 usb1010v2Data.state = USB1010V2_STATE_INITIALIZE_CODECS;
                 break;
             }
             
+            // Ensure codecs are initialized before allowing switch operation
             if (usb1010v2Data.codecsInitialized)
-            {
+            { 
                 // Check phono/line switches for change requirements
                 if (PHONO_SW1StateGet() != usb1010v2Data.inputModeCh1)
                 {
@@ -471,6 +593,52 @@ void USB1010V2_Tasks ( void )
                     usb1010v2Data.state = USB1010V2_STATE_CHANGE_INPUT_MODE;
                     break;
                 }
+            
+                // Check for channel switch actuation
+                if (!usb1010v2Data.gainSwCh1 && GAIN_SW1StateGet())
+                { // Channel 1 gain switch actuated; set flag and record time
+                    usb1010v2Data.gainSwCh1 = true;
+                    usb1010v2Data.startTimeSW1 = usb1010v2Data.currTime;
+                }
+
+                if (!usb1010v2Data.gainSwCh2 && GAIN_SW2StateGet())
+                { // Channel 2 gain switch actuated; set flag and record time
+                    usb1010v2Data.gainSwCh2 = true;
+                    usb1010v2Data.startTimeSW2 = usb1010v2Data.currTime;
+                }
+
+                if (!usb1010v2Data.gainSwCh3 && GAIN_SW3StateGet())
+                { // Channel 3 gain switch actuated; set flag and record time
+                    usb1010v2Data.gainSwCh3 = true;
+                    usb1010v2Data.startTimeSW3 = usb1010v2Data.currTime;
+                }
+
+                if (!usb1010v2Data.gainSwCh4 && GAIN_SW4StateGet())
+                { // Channel 4 gain switch actuated; set flag and record time
+                    usb1010v2Data.gainSwCh4 = true;
+                    usb1010v2Data.startTimeSW4 = usb1010v2Data.currTime;
+                }
+                
+                // Debounce and process switch press data
+                if (usb1010v2Data.gainSwCh1 && !GAIN_SW1StateGet())
+                { // Channel 1 gain switch released; handle switch press
+                    usb1010v2Data.gainSwCh1 = switchPress(usb1010v2Data.startTimeSW1, &usb1010v2Data.changeModeCh1);
+                }
+                
+                if (usb1010v2Data.gainSwCh2 && !GAIN_SW2StateGet())
+                { // Channel 2 gain switch released; handle switch press
+                    usb1010v2Data.gainSwCh2 = switchPress(usb1010v2Data.startTimeSW2, &usb1010v2Data.changeModeCh2);
+                }
+                
+                if (usb1010v2Data.gainSwCh3 && !GAIN_SW3StateGet())
+                { // Channel 3 gain switch released; handle switch press
+                    usb1010v2Data.gainSwCh3 = switchPress(usb1010v2Data.startTimeSW3, &usb1010v2Data.changeModeCh3);
+                }
+                
+                if (usb1010v2Data.gainSwCh4 && !GAIN_SW4StateGet())
+                { // Channel 4 gain switch released; handle switch press
+                    usb1010v2Data.gainSwCh4 = switchPress(usb1010v2Data.startTimeSW4, &usb1010v2Data.changeModeCh4);
+                }
             }
             break;
         }
@@ -491,12 +659,12 @@ void USB1010V2_Tasks ( void )
             }
             
             // Get elapsed time since SMPS startup as local variable. Modular arithmetic is used to handle timer wraparound.
-            uint32_t elapsedTime = (MAIN_TIMER_PERIOD + usb1010v2Data.startTimeSMPS - usb1010v2Data.currTime) 
-                                    % MAIN_TIMER_PERIOD;
+            //uint32_t elapsedTime = (MAIN_TIMER_PERIOD + usb1010v2Data.startTimeSMPS - usb1010v2Data.currTime) 
+            //                        % MAIN_TIMER_PERIOD;
+            uint32_t elapsedSMPSTime = getElapsedTime(usb1010v2Data.startTimeSMPS);
                     
-            if (usb1010v2Data.smpsInitialized && (elapsedTime >= SMPS_STARTUP_DELAY))
-            { // SMPS section started
-                // Enable LDOs
+            if (usb1010v2Data.smpsInitialized && (elapsedSMPSTime >= SMPS_STARTUP_DELAY))
+            { // SMPS section started; enable LDOs
                 EN_POSLDOOn();
                 EN_NEGLDOOn();
             
@@ -597,8 +765,77 @@ void USB1010V2_Tasks ( void )
             }
             
             // Transition to service tasks state
-            usb1010v2Data.state = USB1010V2_STATE_SERVICE_TASKS;
-                
+            usb1010v2Data.state = USB1010V2_STATE_SERVICE_TASKS;   
+            break;
+        }
+        
+        case USB1010V2_STATE_CHANGE_CHANNEL_MODE:
+        {
+            /* TODO: Finish this state 3/12/19 */
+            // Process each channel for active change flags
+            if (usb1010v2Data.gainSwCh1)
+            {
+                channelChange(  CODEC_1, 
+                                usb1010v2Data.changeModeCh1, 
+                                &usb1010v2Data.gainSwCh1, 
+                                &usb1010v2Data.thruModeCh1, 
+                                &usb1010v2Data.gainModeCh1);
+            }
+            
+            if (usb1010v2Data.gainSwCh2)
+            {
+                channelChange(  CODEC_2, 
+                                usb1010v2Data.changeModeCh2, 
+                                &usb1010v2Data.gainSwCh2, 
+                                &usb1010v2Data.thruModeCh2, 
+                                &usb1010v2Data.gainModeCh2);
+            }
+            
+            if (usb1010v2Data.gainSwCh3)
+            {
+                channelChange(  CODEC_3, 
+                                usb1010v2Data.changeModeCh3, 
+                                &usb1010v2Data.gainSwCh3, 
+                                &usb1010v2Data.thruModeCh3, 
+                                &usb1010v2Data.gainModeCh3);
+            }
+            
+            if (usb1010v2Data.gainSwCh4)
+            {
+                channelChange(  CODEC_4, 
+                                usb1010v2Data.changeModeCh4, 
+                                &usb1010v2Data.gainSwCh4, 
+                                &usb1010v2Data.thruModeCh4, 
+                                &usb1010v2Data.gainModeCh4);
+            }
+            
+            // Get new LED configuration
+            uint8_t newCh12,
+                    newCh34;
+            
+            /* Table mapping for LED values by channel grouping
+             Color     1-2     3-4     Setting
+             ----------------------------------
+             Red        8       1       THRU
+             Yellow     4       2       +3dB
+             Green      2       4       0dB
+             Blue       1       8       -3dB
+             
+             The I/O expander payload generation algorithms below are derived from the table above
+            */
+            
+            newCh12 =   (usb1010v2Data.thruModeCh1 ? 0x08 : 0x01 << usb1010v2Data.gainModeCh1) + 
+                        ((usb1010v2Data.thruModeCh2 ? 0x08 : 0x01 << usb1010v2Data.gainModeCh2) << 4);
+            
+            newCh34 =   (usb1010v2Data.thruModeCh3 ? 0x01 : 0x01 << (3 - usb1010v2Data.gainModeCh3)) + 
+                        ((usb1010v2Data.thruModeCh4 ? 0x01 : 0x01 << (3 - usb1010v2Data.gainModeCh4)) << 4);
+            
+            // Update LEDs            
+            writeI2Cdata(EXPR_ADDR, 0x03, newCh12);
+            writeI2Cdata(EXPR_ADDR, 0x02, newCh34);
+            
+            // Transition to service tasks state
+            usb1010v2Data.state = USB1010V2_STATE_SERVICE_TASKS;    
             break;
         }
         

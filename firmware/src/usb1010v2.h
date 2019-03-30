@@ -95,6 +95,7 @@ typedef enum
     USB1010V2_STATE_INITIALIZE_CODECS,
     USB1010V2_STATE_INITIALIZE_POWER,
     USB1010V2_STATE_CHANGE_INPUT_MODE,
+    USB1010V2_STATE_CHANGE_CHANNEL_MODE,
 
 } USB1010V2_STATES;
 
@@ -138,6 +139,18 @@ typedef struct
             codec4ok,               // Codec 4 startup configuration flag
             ledsDefault,            // Initial LED state configuration flag   
             codecsInitialized,      // Codec initial configuration flag
+            gainSwCh1,              // Gain switch activation flags
+            gainSwCh2,
+            gainSwCh3,
+            gainSwCh4,
+            changeModeCh1,          // Gain switch change mode flags
+            changeModeCh2,
+            changeModeCh3,
+            changeModeCh4,
+            thruModeCh1,            // Thru mode status flags
+            thruModeCh2,
+            thruModeCh3,
+            thruModeCh4,
             inputToggleCh1,         // Input selection toggle flags
             inputToggleCh2,
             inputToggleCh3,

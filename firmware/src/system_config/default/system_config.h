@@ -100,7 +100,7 @@ extern "C" {
 #define SYS_PORT_B_TRIS         0x3FF0
 #define SYS_PORT_B_LAT          0x0000
 #define SYS_PORT_B_ODC          0x0000
-#define SYS_PORT_B_CNPU         0x2C80
+#define SYS_PORT_B_CNPU         0x0000
 #define SYS_PORT_B_CNPD         0x0030
 #define SYS_PORT_B_CNEN         0x0000
 
@@ -204,29 +204,29 @@ extern "C" {
 #define LED3Off() PLIB_PORTS_PinClear(PORTS_ID_0, PORT_CHANNEL_A, PORTS_BIT_POS_2)
 #define LED3StateGet() PLIB_PORTS_PinGetLatched(PORTS_ID_0, PORT_CHANNEL_A, PORTS_BIT_POS_2)
 
-/*** Functions for GAIN_SW1 pin ***/
-#define GAIN_SW1StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_A, PORTS_BIT_POS_3)
-
-/*** Functions for GAIN_SW2 pin ***/
-#define GAIN_SW2StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_4)
+/*** Functions for GAIN_SW4 pin ***/
+#define GAIN_SW4StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_A, PORTS_BIT_POS_3)
 
 /*** Functions for GAIN_SW3 pin ***/
-#define GAIN_SW3StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_A, PORTS_BIT_POS_4)
+#define GAIN_SW3StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_4)
 
-/*** Functions for GAIN_SW4 pin ***/
-#define GAIN_SW4StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_5)
+/*** Functions for GAIN_SW2 pin ***/
+#define GAIN_SW2StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_A, PORTS_BIT_POS_4)
 
-/*** Functions for PHONO_SW4 pin ***/
-#define PHONO_SW4StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_7)
-
-/*** Functions for PHONO_SW3 pin ***/
-#define PHONO_SW3StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_10)
-
-/*** Functions for PHONO_SW2 pin ***/
-#define PHONO_SW2StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_11)
+/*** Functions for GAIN_SW1 pin ***/
+#define GAIN_SW1StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_5)
 
 /*** Functions for PHONO_SW1 pin ***/
-#define PHONO_SW1StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_13)
+#define PHONO_SW1StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_7)
+
+/*** Functions for PHONO_SW2 pin ***/
+#define PHONO_SW2StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_10)
+
+/*** Functions for PHONO_SW3 pin ***/
+#define PHONO_SW3StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_11)
+
+/*** Functions for PHONO_SW4 pin ***/
+#define PHONO_SW4StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_13)
 
 /*** Functions for EN_POSREG pin ***/
 #define EN_POSREGToggle() PLIB_PORTS_PinToggle(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_0)
@@ -265,7 +265,11 @@ extern "C" {
 
 /* Main timer definition macros */
 #define MAIN_TIMER_PERIOD               0xFFFF  // milliseconds
-#define SMPS_STARTUP_DELAY              5       // milliseconds    
+#define SMPS_STARTUP_DELAY              5
+#define MIN_SWITCH_DELAY                10
+#define GAIN_SWITCH_DELAY               200  
+#define THRU_SWITCH_DELAY               1000
+#define MAX_SWITCH_DELAY                4000
     
 /* Debug/bring-up mode definition macros */    
 #define DEBUG_MODE                      true    // flag for debug LED control
@@ -275,9 +279,9 @@ extern "C" {
 #define LINE_INPUT                      0x30
 #define PHONO_INPUT                     0x0C    
 #define GAIN_FLAT                       0x1B
-//#define GAIN_3_DN                       0x24
+#define GAIN_3_DN                       0x24
 //#define GAIN_6_DN                       0x2D
-//#define GAIN_3_UP                       0x12
+#define GAIN_3_UP                       0x12
 #define MAX_NUMBER_OF_BUFFERS           10
 #define MAX_WRITE_RETRIES               5
 #define CODEC_SLAVE_WR                  0x20
@@ -292,6 +296,15 @@ extern "C" {
 /* Input mode definition macros */
 #define LINE_LEVEL                      0
 #define PHONO_LEVEL                     1
+
+/* Change mode definition macros */
+#define THRU_CHANGE                     0
+#define GAIN_CHANGE                     1
+#define GAIN_m3dB                       0
+#define GAIN_0dB                        1
+#define GAIN_p3dB                       2
+#define THRU_OFF                        0
+#define THRU_ON                         1
     
 // END OF CUSTOM CODE
     
