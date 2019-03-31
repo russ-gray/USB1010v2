@@ -204,29 +204,29 @@ extern "C" {
 #define LED3Off() PLIB_PORTS_PinClear(PORTS_ID_0, PORT_CHANNEL_A, PORTS_BIT_POS_2)
 #define LED3StateGet() PLIB_PORTS_PinGetLatched(PORTS_ID_0, PORT_CHANNEL_A, PORTS_BIT_POS_2)
 
-/*** Functions for GAIN_SW4 pin ***/
-#define GAIN_SW4StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_A, PORTS_BIT_POS_3)
-
-/*** Functions for GAIN_SW3 pin ***/
-#define GAIN_SW3StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_4)
+/*** Functions for GAIN_SW1 pin ***/
+#define GAIN_SW1StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_A, PORTS_BIT_POS_3)
 
 /*** Functions for GAIN_SW2 pin ***/
-#define GAIN_SW2StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_A, PORTS_BIT_POS_4)
+#define GAIN_SW2StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_4)
 
-/*** Functions for GAIN_SW1 pin ***/
-#define GAIN_SW1StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_5)
+/*** Functions for GAIN_SW3 pin ***/
+#define GAIN_SW3StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_A, PORTS_BIT_POS_4)
 
-/*** Functions for PHONO_SW1 pin ***/
-#define PHONO_SW1StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_7)
-
-/*** Functions for PHONO_SW2 pin ***/
-#define PHONO_SW2StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_10)
-
-/*** Functions for PHONO_SW3 pin ***/
-#define PHONO_SW3StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_11)
+/*** Functions for GAIN_SW4 pin ***/
+#define GAIN_SW4StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_5)
 
 /*** Functions for PHONO_SW4 pin ***/
-#define PHONO_SW4StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_13)
+#define PHONO_SW4StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_7)
+
+/*** Functions for PHONO_SW3 pin ***/
+#define PHONO_SW3StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_10)
+
+/*** Functions for PHONO_SW2 pin ***/
+#define PHONO_SW2StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_11)
+
+/*** Functions for PHONO_SW1 pin ***/
+#define PHONO_SW1StateGet() PLIB_PORTS_PinGet(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_13)
 
 /*** Functions for EN_POSREG pin ***/
 #define EN_POSREGToggle() PLIB_PORTS_PinToggle(PORTS_ID_0, PORT_CHANNEL_B, PORTS_BIT_POS_0)
@@ -286,10 +286,10 @@ extern "C" {
 #define MAX_WRITE_RETRIES               5
 #define CODEC_SLAVE_WR                  0x20
 #define INIT_WRITE_COUNT                22      //total number of init write operations
-#define CODEC_1                         0x01
-#define CODEC_2                         0x02
-#define CODEC_3                         0x04
-#define CODEC_4                         0x08    
+#define CODEC_1                         0x08
+#define CODEC_2                         0x04
+#define CODEC_3                         0x02
+#define CODEC_4                         0x01    
 #define MULT_ADDR                       0xE0
 #define EXPR_ADDR                       0x40
 

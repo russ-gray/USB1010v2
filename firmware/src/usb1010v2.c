@@ -816,23 +816,24 @@ void USB1010V2_Tasks ( void )
             /* Table mapping for LED values by channel grouping
              Color     1-2     3-4     Setting
              ----------------------------------
-             Red        8       1       THRU
-             Yellow     4       2       +3dB
-             Green      2       4       0dB
-             Blue       1       8       -3dB
+             Red        1       8       THRU
+             Yellow     2       4       +3dB
+             Green      4       2        0dB
+             Blue       8       1       -3dB
              
              The I/O expander payload generation algorithms below are derived from the table above
             */
             
-            newCh12 =   (usb1010v2Data.thruModeCh1 ? 0x08 : 0x01 << usb1010v2Data.gainModeCh1) + 
-                        ((usb1010v2Data.thruModeCh2 ? 0x08 : 0x01 << usb1010v2Data.gainModeCh2) << 4);
+            newCh12 =   ((usb1010v2Data.thruModeCh1 ? 0x01 : 0x01 << (3 - usb1010v2Data.gainModeCh1)) << 4) + 
+                        (usb1010v2Data.thruModeCh2 ? 0x01 : 0x01 << (3 - usb1010v2Data.gainModeCh2));
             
-            newCh34 =   (usb1010v2Data.thruModeCh3 ? 0x01 : 0x01 << (3 - usb1010v2Data.gainModeCh3)) + 
-                        ((usb1010v2Data.thruModeCh4 ? 0x01 : 0x01 << (3 - usb1010v2Data.gainModeCh4)) << 4);
+            newCh34 =   ((usb1010v2Data.thruModeCh3 ? 0x08 : 0x01 << usb1010v2Data.gainModeCh3) << 4) + 
+                        (usb1010v2Data.thruModeCh4 ? 0x08 : 0x01 << usb1010v2Data.gainModeCh4);
+            
             
             // Update LEDs            
-            writeI2Cdata(EXPR_ADDR, 0x03, newCh12);
-            writeI2Cdata(EXPR_ADDR, 0x02, newCh34);
+            writeI2Cdata(EXPR_ADDR, 0x02, newCh12);
+            writeI2Cdata(EXPR_ADDR, 0x03, newCh34);
             
             // Transition to service tasks state
             usb1010v2Data.state = USB1010V2_STATE_SERVICE_TASKS;    
